@@ -44,7 +44,7 @@ yt-dlp --js-runtimes deno --remote-components ejs:github \
 
 Use this route for matching and inspection. Do not assume the output is lossless even when the upload title says FLAC.
 
-After download, quarantine files whose filename or tags expose `Live`, `伴奏`, `Karaoke`, `Cover`, remix, medley, or playlist markers unless that version was explicitly requested.
+After download, quarantine files whose filename or tags expose `Live`, `伴奏`, `Karaoke`, `Cover`, remix, medley, or playlist markers unless that version was explicitly requested. Accepted files must have title, artist, and embedded cover artwork before import.
 
 ### Tidal / streamrip Route
 
@@ -65,7 +65,13 @@ Use Tidal downloads when the user has an active subscription and wants a higher-
 
 Do not auto-download from raw search results. Search output can contain covers or misleading titles, such as a candidate where the original artist appears in `desc_title` but the structured Tidal artist is someone else. For example, `林俊杰 - Always Online by A` means the platform artist is `A`, not 林俊杰. Before batch work, keep streamrip conservative: `max_connections = 1` or `2`, `requests_per_minute = 20` or lower, and no parallel agents using the same account.
 
-After a Tidal batch, run a filename or tag QA pass before importing files into a main music library. Search output may omit version qualifiers that appear only after download. Move files with markers such as `Live`, `伴奏`, `Karaoke`, `Cover`, or medley titles into a quarantine directory for manual review instead of mixing them with accepted studio tracks.
+After a Tidal batch, run a filename or tag QA pass before importing files into a main music library. Search output may omit version qualifiers that appear only after download. Move files with markers such as `Live`, `伴奏`, `Karaoke`, `Cover`, or medley titles into a quarantine directory for manual review instead of mixing them with accepted studio tracks. Then verify title, artist, and embedded cover artwork:
+
+```bash
+.venv/bin/python scripts/tidal_download_from_csv.py verify-tags \
+  --library-dir library/tidal \
+  --output source_identification/tidal_tag_report.csv
+```
 
 If Tidal OAuth fails with 403 or `invalid_client`, check for a newer streamrip release first. Some releases may ship a revoked Tidal client ID. Patch only the local virtual environment with private values, never the public repo:
 
@@ -111,4 +117,5 @@ The repo does not hard-require one fixed ASR installation path. If `ONLINE_MEDIA
 - Platform audio format IDs differ by login status and availability. Prefer declared best-audio behavior over assuming one fixed bitrate.
 - Tidal candidate metadata can omit live/accompaniment qualifiers that appear in the downloaded filename. Treat post-download filename/tag QA as part of the acquisition workflow.
 - YouTube search ranking is not evidence of correctness. Use it to create a reviewable candidate table, then download approved URLs only.
+- Missing title, artist, or cover artwork means the file is not ready for local library import. Fetch artwork from the selected platform metadata when available, then rerun tag verification.
 - ASR output may use simplified/traditional variants or misrecognize proper nouns. Preserve raw transcript artifacts so the agent can reason about uncertainty.
