@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "online-media-skill"
+version = "0.1.0"
+description = "CLI artifacts and agent workflows for online media processing"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11"
+dependencies = [
+  "mutagen>=1.47",
+  "yt-dlp>=2026.3.17",
+  "streamrip>=2.1",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8",
+]
+
+[project.scripts]
+bilibili-music = "scripts.bilibili_music:main"
+medley-identify = "scripts.medley_identify:main"
+
+[tool.setuptools.packages.find]
+include = ["scripts*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+  "live_download: requires network media downloads",
+  "live_asr: requires local ASR runtime and model weights",
+  "live_search: requires external search API access",
+]
