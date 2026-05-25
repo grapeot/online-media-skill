@@ -18,13 +18,17 @@ This skill can use platform metadata and thumbnails to fill local tags. It shoul
 
 ```bash
 .venv/bin/python scripts/bilibili_music.py --verify-only library/example.m4a
+.venv/bin/python scripts/tidal_download_from_csv.py verify-tags --library-dir library/tidal
 ```
 
 The downloader writes MP4 tags through `mutagen` rather than relying only on `yt-dlp --embed-metadata`, because iPhone/Apple Music import needs predictable title, artist, album, track, comment, and cover fields.
 
+For Tidal and YouTube batch acquisition, post-download metadata verification is required before import. Accepted audio must have title, artist, and embedded cover artwork. If any of those fields are missing, fetch artwork from the selected platform metadata or quarantine the file until it can be corrected.
+
 ## Acceptance Criteria
 
 - `title`, `artist`, `album_artist`, and `has_cover` are present when platform metadata provides enough information.
+- Tidal/YouTube source batches pass `verify-tags` or an equivalent tag report with zero `missing_metadata` rows before import.
 - Playlist imports include track numbers when order is known.
 - `comment` retains a stable source identifier such as a video ID and canonical webpage URL.
 - Verification output is machine-readable JSON.

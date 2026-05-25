@@ -45,7 +45,7 @@ yt-dlp --js-runtimes deno --remote-components ejs:github \
 
 Expected quality is usually lossy. This route is good for matching, transcription, and listening checks, but it is not the preferred archive source when a licensed lossless source is available.
 
-After download, run the same filename/tag QA as Route B. Move files with version markers into quarantine rather than mixing them into the accepted directory.
+After download, run the same filename/tag QA as Route B. Move files with version markers into quarantine rather than mixing them into the accepted directory. Accepted files must have title, artist, and embedded cover artwork before import.
 
 ### Route B: Tidal With streamrip
 
@@ -82,7 +82,15 @@ Candidate review rules:
 - Prefer official original studio recordings over covers, karaoke, live versions, medleys, and "翻自/Cover" uploads unless the source row explicitly wants that version.
 - If all candidates are weak, leave `decision` blank and change the search query manually: try traditional characters, English catalog title, romanized artist, album title, or lyric anchor.
 
-After download, inspect filenames or audio metadata for version markers such as `Live`, `伴奏`, `Karaoke`, `Cover`, or medley titles. Tidal search descriptions can omit these details even when the downloaded track filename exposes them. Quarantine those files outside the accepted library and keep the source row unresolved for another search pass.
+After download, inspect filenames or audio metadata for version markers such as `Live`, `伴奏`, `Karaoke`, `Cover`, or medley titles. Tidal search descriptions can omit these details even when the downloaded track filename exposes them. Quarantine those files outside the accepted library and keep the source row unresolved for another search pass. Accepted files must also pass tag QA: title, artist, and embedded cover artwork are required.
+
+Use the helper to verify accepted files before importing them:
+
+```bash
+.venv/bin/python scripts/tidal_download_from_csv.py verify-tags \
+  --library-dir library/tidal \
+  --output source_identification/tidal_tag_report.csv
+```
 
 Observed local experiment on 2026-05-24:
 
@@ -143,4 +151,5 @@ Recommended JSON fields:
 - Reuploads often have wrong titles or misleading descriptions. Verify with transcript, duration, thumbnail, and metadata when possible.
 - Tidal search metadata can be cleaner than the downloaded track metadata. A candidate may look like `天下 by 张杰` in search output but download as `天下 (Live)`. Run post-download filename or tag QA before treating the batch as accepted.
 - YouTube `ytsearch` should be treated as candidate discovery, not selection. Search ranking often surfaces lyric videos, unofficial uploads, or user compilations before the best source.
+- A file without embedded artwork is not library-ready even if the audio download succeeded. Treat missing title, artist, or cover artwork as a metadata QA failure.
 - A high-quality source for listening may still be unsuitable for redistribution. Keep downloads local and within the user's access rights.

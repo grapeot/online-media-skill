@@ -15,9 +15,13 @@ import json
 import re
 import subprocess
 import time
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
-from typing import cast
+from typing import Protocol, cast
+
+from mutagen.flac import FLAC
+from mutagen.mp3 import MP3
+from mutagen.mp4 import MP4
 
 
 DEFAULT_INPUT = Path("source_identification/medley_sources_download_queue.csv")
@@ -42,6 +46,13 @@ CANDIDATE_COLUMNS = [
     "review_notes",
 ]
 LOG_COLUMNS = ["source_order", "song_title", "artist", "status", "tidal_id", "tidal_desc", "message"]
+TAG_REPORT_COLUMNS = ["path", "extension", "has_title", "has_artist", "has_cover", "status"]
+
+
+class Id3Tags(Protocol):
+    def get(self, key: str, default: object | None = None) -> object | None: ...
+
+    def getall(self, key: str) -> list[object]: ...
 
 
 def normalize(value: str) -> str:
@@ -255,6 +266,59 @@ def command_download_approved(args: argparse.Namespace) -> int:
     return 0
 
 
+def inspect_media_tags(path: Path) -> dict[str, str]:
+    has_title = False
+    has_artist = False
+    has_cover = False
+    extension = path.suffix.lower()
+    if extension == ".flac":
+        audio = FLAC(path)
+        flac_tags = cast(Mapping[str, object], cast(object, audio))
+        pictures = cast(Sequence[object], audio.pictures)
+        has_title = bool(flac_tags.get("title"))
+        has_artist = bool(flac_tags.get("artist"))
+        has_cover = bool(pictures)
+    elif extension == ".mp3":
+        audio = MP3(path)
+        tags = cast(Id3Tags | None, audio.tags)
+        has_title = bool(tags and tags.get("TIT2"))
+        has_artist = bool(tags and tags.get("TPE1"))
+        has_cover = bool(tags and tags.getall("APIC"))
+    elif extension == ".m4a":
+        audio = MP4(path)
+        tags = cast(Mapping[str, object] | None, audio.tags)
+        has_title = bool(tags and tags.get("\xa9nam"))
+        has_artist = bool(tags and tags.get("\xa9ART"))
+        has_cover = bool(tags and tags.get("covr"))
+    ok = has_title and has_artist and has_cover
+    return {
+        "path": str(path),
+        "extension": extension,
+        "has_title": "true" if has_title else "false",
+        "has_artist": "true" if has_artist else "false",
+        "has_cover": "true" if has_cover else "false",
+        "status": "ok" if ok else "missing_metadata",
+    }
+
+
+def command_verify_tags(args: argparse.Namespace) -> int:
+    library_dir = cast(Path, args.library_dir)
+    output_path = cast(Path | None, args.output)
+    extensions = {".flac", ".mp3", ".m4a"}
+    rows = [inspect_media_tags(path) for path in sorted(library_dir.rglob("*")) if path.is_file() and path.suffix.lower() in extensions]
+    if output_path is not None:
+        write_rows(output_path, TAG_REPORT_COLUMNS, rows)
+    missing = [row for row in rows if row["status"] != "ok"]
+    print(f"files={len(rows)}")
+    print(f"ok={len(rows) - len(missing)}")
+    print(f"missing_metadata={len(missing)}")
+    if output_path is not None:
+        print(f"tag_report={output_path}")
+    for row in missing[:20]:
+        print(f"missing {row['path']}: title={row['has_title']} artist={row['has_artist']} cover={row['has_cover']}")
+    return 1 if missing else 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -279,6 +343,11 @@ def build_parser() -> argparse.ArgumentParser:
     _ = p_download.add_argument("--limit", type=int)
     _ = p_download.add_argument("--resume", action="store_true")
     p_download.set_defaults(func=command_download_approved)
+
+    p_verify = sub.add_parser("verify-tags", help="Verify downloaded audio has title, artist, and cover artwork")
+    _ = p_verify.add_argument("--library-dir", type=Path, default=DEFAULT_DOWNLOAD_DIR)
+    _ = p_verify.add_argument("--output", type=Path)
+    p_verify.set_defaults(func=command_verify_tags)
     return parser
 
 
