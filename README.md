@@ -84,6 +84,9 @@ Installers should check current upstream instructions before pinning package nam
 
 # Prepare medley/transcript artifacts.
 .venv/bin/python scripts/medley_identify.py --help
+
+# Plan/apply metadata repair and Apple Music compatible imports.
+.venv/bin/python scripts/metadata_resync.py --help
 ```
 
 The medley CLI exports deterministic query packs. Final song identification belongs in the agent workflow described in `skills/online_media.md`.
