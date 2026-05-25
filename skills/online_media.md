@@ -20,6 +20,8 @@ Use `skills/media_metadata.md` when the task is to fill or verify local audio me
 
 Use `skills/source_search.md` when the task starts from a song title, partial lyric, description, or remembered fragment and the goal is to find a high-quality candidate source before download or verification.
 
+Use `skills/music_library_dedup.md` when the task is to inventory `~/Music/CloudMusic` and `~/Music/Music`, cluster duplicate local tracks, pick canonical copies, and produce a human-review CSV/HTML artifact before trashing files.
+
 ## CLI vs Agent Boundary
 
 The CLI may:
