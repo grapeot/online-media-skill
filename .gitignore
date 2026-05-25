@@ -1,0 +1,36 @@
+.DS_Store
+.env
+.env.*
+!.env.example
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+dist/
+build/
+*.egg-info/
+
+# Runtime media and private platform artifacts
+library/
+source_identification/
+asr_smoke/
+tmp/
+logs/
+download.log
+*.m4a
+*.mp3
+*.mp4
+*.wav
+*.flac
+*.info.json
+*.transcript.json
+*.segments.jsonl
+*.anchor_queries.jsonl
+*.tavily.json
+
+# Keep fake fixtures explicitly if needed later.
+!tests/fixtures/**/*.json
+!tests/fixtures/**/*.jsonl
+!tests/fixtures/**/*.md
