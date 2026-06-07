@@ -28,6 +28,28 @@ The current Bilibili downloader preserves the original audio stream where possib
 
 ## Music Download Routes
 
+### Bilibili short links and HTTP 412
+
+Do not pass `b23.tv` short links directly to the downloader when reproducibility matters. Bilibili can return `HTTP Error 412: Precondition Failed` for generic extractors even when the short link is valid in a browser. Resolve the short link first with a browser user agent, keep only the canonical `BV...` URL, and discard the expanded query string because it can contain share metadata and browser identifiers.
+
+```bash
+curl -L -A 'Mozilla/5.0' -I 'https://b23.tv/SHORT_ID'
+# Use the Location header's BV id only:
+# https://www.bilibili.com/video/BVxxxxxxxxxx/
+```
+
+If the canonical BV URL still returns 412, retry with browser cookies only for local/private work:
+
+```bash
+.venv/bin/python -m yt_dlp --cookies-from-browser chrome \
+  -f bestaudio \
+  --write-info-json \
+  -o 'library/%(title)s.%(ext)s' \
+  'https://www.bilibili.com/video/BVxxxxxxxxxx/'
+```
+
+Treat any `.info.json` and expanded Bilibili URLs as private runtime data. They may include signed CDN URLs, cookies, `buvid`, share session IDs, or local browser-derived state. Keep them under ignored runtime directories and never copy them into docs, fixtures, commits, or public issue/PR bodies.
+
 ### YouTube / yt-dlp Route
 
 Use YouTube downloads for quick verification and broad availability. Install `yt-dlp`, `ffmpeg`, and `deno`. Deno plus the EJS remote component resolves the current YouTube JavaScript challenge warning.

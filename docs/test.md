@@ -130,4 +130,6 @@ rg -n "/Users/|https://upos|deadline=|upsig=|SESSDATA=|bili_jct=|buvid=[A-Za-z0-
 
 Expected result for public files is zero matches. Runtime directories are ignored and should not be staged.
 
+For Bilibili short-link troubleshooting, do not commit expanded `b23.tv` redirect URLs. Keep only canonical `https://www.bilibili.com/video/BV.../` examples in public docs. Expanded redirect URLs can contain `buvid`, `share_session_id`, `mid`, `up_id`, and other private or user-specific tracking parameters.
+
 Inventory CSVs under `source_identification/` contain local absolute paths and must stay out of git.
