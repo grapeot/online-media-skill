@@ -22,6 +22,8 @@ Use `skills/source_search.md` when the task starts from a song title, partial ly
 
 Use `skills/music_library_dedup.md` when the task is to inventory `~/Music/CloudMusic` and `~/Music/Music`, cluster duplicate local tracks, pick canonical copies, and produce a human-review CSV/HTML artifact before trashing files.
 
+Use `skills/bilingual_subtitles.md` when the task is to correct ASR, restore semantic sentence boundaries, translate, and produce a reviewed two-line SRT from a local or permitted online recording.
+
 ## CLI vs Agent Boundary
 
 The CLI may:
@@ -33,6 +35,7 @@ The CLI may:
 - split lyrics or speech into segments
 - generate search/query packs
 - verify local file metadata
+- prepare, render, and structurally validate bilingual subtitle artifacts
 
 The agent must handle:
 
@@ -42,6 +45,7 @@ The agent must handle:
 - merging adjacent segments into songs or topics
 - assigning confidence and `needs_review`
 - writing final reports, JSON, or CSV deliverables
+- correcting transcript language, merging semantic sentences, translating, and reviewing bilingual subtitle readability
 
 ## Shared Boundary
 

@@ -44,10 +44,12 @@ online-media-skill/
 │   ├── download_and_transcribe.md
 │   ├── medley_source_identification.md
 │   ├── media_metadata.md
-│   └── source_search.md
+│   ├── source_search.md
+│   └── bilingual_subtitles.md
 ├── scripts/
 │   ├── bilibili_music.py
-│   └── medley_identify.py
+│   ├── medley_identify.py
+│   └── bilingual_subtitles.py
 ├── src/
 │   └── online_media_skill/
 └── tests/
@@ -79,6 +81,17 @@ The public repo must not include downloaded media or real platform info JSON.
 
 `identify` was removed from the public CLI. Final source identification belongs in the agent workflow. If a future deterministic finalizer is needed, it should consume an externally reviewed evidence file rather than calling search or assigning confidence internally.
 
+### Bilingual Subtitle Preparation
+
+`bilingual_subtitles.py` exposes deterministic artifact operations:
+
+- `prepare`: parse VTT timing and speaker text into source JSONL packets and persist a versioned manifest binding VTT/source hashes and language order;
+- `verify-work`: require complete, duplicate-free source-cue coverage and unchanged cue-group timing;
+- `render`: re-verify source coverage, consume agent-reviewed segment timing, write two-line UTF-8 SRT, and add reviewed-input/SRT hashes to the manifest;
+- `validate`: verify the manifest's SRT hash, then check indices, timing, overlap, non-empty lines, media duration, and short display intervals.
+
+The CLI does not correct ASR, decide semantic sentence boundaries, translate, or judge translation quality. Those decisions remain in `skills/bilingual_subtitles.md` and produce reviewed JSONL before rendering.
+
 ## Sidecar Schemas
 
 ### `segments.jsonl`
@@ -101,6 +114,14 @@ order,source_file,asr_file,start,end,song_title,artist,release_year,lyric_eviden
 
 The final CSV is an agent artifact, not a deterministic CLI artifact, unless it is generated from a reviewed evidence file.
 
+### Bilingual Subtitle Work JSONL
+
+```json
+{"source_cue_ids":[15,16],"start":84.155,"end":112.064,"segments":[{"start":84.155,"end":112.064,"line_1":"Welcome, everyone.","line_2":"欢迎大家。"}]}
+```
+
+`source_cue_ids` makes cross-cue semantic merging auditable. Each source cue must appear exactly once across reviewed records. Each segment carries agent-reviewed timing rather than receiving a text-length estimate from the CLI. `line_1` and `line_2` are language-neutral at the schema layer; a versioned manifest persists their language order before processing.
+
 ## Agent Contract
 
 The agent reads query packs and decides search strategy. Tavily `answer` is a hint, not evidence. A `high` confidence music match requires source snippets or extracted page text to support both the lyric anchor and the song identity. Aggregate answers without supporting snippets should be `low` or `needs_review=true`.
@@ -109,9 +130,11 @@ For talks and meetings, the agent reads transcript sidecars and produces transla
 
 For candidate song verification, the agent may ask the CLI to download/transcribe candidates, but the same-song judgment remains in the agent layer and must cite lyrics, metadata, or description evidence.
 
+For bilingual subtitles, the agent owns transcript correction, semantic cue grouping, translation, glossary consistency, and readability review. A structurally valid SRT is not evidence of linguistic quality.
+
 ## Testing Strategy
 
-Default tests are offline and fixture-based. They cover filename detection, ASR Markdown parsing, anchor generation, JSONL writing, and deterministic metadata formatting.
+Default tests are offline and fixture-based. They cover filename detection, ASR Markdown parsing, anchor generation, JSONL writing, deterministic metadata formatting, VTT parsing, grouped cue coverage, bilingual SRT rendering, spacing preservation, and timing validation.
 
 Live tests are opt-in:
 

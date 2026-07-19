@@ -12,6 +12,9 @@ The default test suite must run without network, API keys, ASR model downloads, 
 - JSONL/CSV writer behavior
 - mocked metadata/tag parsing where possible
 - audio tag normalization, inventory record building, and `read-tags` CSV export
+- VTT parsing and non-overlapping packet boundaries
+- grouped source-cue coverage, explicit segment timing, and language-manifest invariants
+- bilingual SRT rendering, mixed-script spacing, and structural validation
 
 Run from the project root:
 
@@ -30,6 +33,7 @@ If `.venv` does not exist, create it with `uv venv` and install dependencies wit
 | Music library CLI | `tests/test_music_library_dedup.py` | `read-tags` parser wiring, missing-root handling, `build-review` parser wiring |
 | Music library dedupe logic | `tests/test_dedup_logic.py` | canonical ranking, duplicate clustering, near-duplicate separation, version-marker detection |
 | Metadata resync CLI | `tests/test_metadata_resync.py` | dry-run parser wiring, placeholder album rejection, MP3 album writing, researched-album plan generation, already-fixed row handling |
+| Bilingual subtitles | `tests/test_bilingual_subtitles.py` | VTT parsing, packet boundaries, JSONL coverage, grouped cues, SRT rendering, mixed-script spacing, overlap and duration checks |
 
 Tag-reading offline tests use synthetic fixtures rather than real audio streams:
 
@@ -53,6 +57,8 @@ There is no committed live test yet for local library inventory. Manual verifica
 For media download/tagging, manually verify that a downloaded `.m4a` can be opened locally and has title, artist, album, track, and cover metadata.
 
 For medley identification, manually inspect final agent CSV rows with `confidence=high` and confirm that each row has source text supporting both lyric evidence and song identity.
+
+For bilingual subtitles, run a short pilot before full processing. Inspect language order, terminology, sentence boundaries, translation alignment, short display intervals, and packet boundaries. After rendering, run `bilingual-subtitles validate` and verify the SRT loads in the target player. If FFmpeg lacks the libass `subtitles` filter, mux a short MP4 with `-c:s mov_text` and confirm the subtitle stream with `ffprobe`.
 
 For local music-library inventory, run:
 

@@ -20,6 +20,7 @@ The CLI owns deterministic or artifact-producing work:
 - Parse transcripts into timestamped segments.
 - Generate lyric/search anchor candidates and query packs.
 - Verify file metadata and produce machine-readable reports.
+- Prepare VTT work packets, verify source-cue coverage, render reviewed bilingual segments, and validate SRT structure.
 
 The AI agent owns judgment work:
 
@@ -29,6 +30,7 @@ The AI agent owns judgment work:
 - Merge uncertain evidence across segments.
 - Assign confidence and review flags.
 - Write final CSV/JSON/report artifacts.
+- Correct ASR, restore semantic sentence boundaries, translate, and review bilingual subtitle language.
 
 This boundary keeps the CLI reusable across projects. It also avoids hiding Tavily aggregate answers or LLM-style judgments inside a command that appears deterministic.
 
@@ -52,6 +54,12 @@ Input can be a known song title, partial lyric, description, or local audio. The
 
 Success means the final judgment cites both candidate metadata and content evidence. Downloading candidates and deciding whether they match remain separate steps.
 
+### 4. Agent-Led Bilingual Subtitles
+
+Input can be a local or permitted online recording plus any available VTT, SRT, diarization, or ASR sidecars. The CLI prepares timestamped work packets and later verifies coverage, renders reviewed bilingual segments, and validates the SRT. The agent compares transcript evidence, corrects terminology, restores sentences across raw cue boundaries, translates, and performs global readability QA.
+
+Success means the final SRT has a persisted language-order manifest, complete source-cue coverage, aligned bilingual meaning, consistent terminology, agent-reviewed segment timing, and a player-load or mux smoke test. Raw transcript artifacts remain separate so another agent can audit or retranslate the recording without rerunning ASR.
+
 ## Non-Goals
 
 - Do not ship copyrighted audio, real downloaded media, real platform `.info.json` files, or real ASR outputs in the public repository.
@@ -67,3 +75,4 @@ Success means the final judgment cites both candidate metadata and content evide
 - Live integration tests are opt-in through explicit environment variables.
 - CLI outputs are structured JSON/JSONL/CSV/Markdown sidecars with stable schemas.
 - Agent-facing skills define evidence requirements and confidence rules for intelligent steps.
+- Bilingual subtitle tooling remains deterministic: it never calls an LLM or presents machine translation as a CLI result.

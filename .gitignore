@@ -28,6 +28,12 @@ download.log
 *.transcript.json
 *.segments.jsonl
 *.anchor_queries.jsonl
+*.vtt
+*.srt
+*.subtitle_source.jsonl
+*.subtitle_reviewed.jsonl
+*.subtitle_manifest.json
+subtitle_work/
 *.tavily.json
 
 # Keep fake fixtures explicitly if needed later.
