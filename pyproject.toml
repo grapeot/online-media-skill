@@ -25,6 +25,7 @@ bilibili-music = "scripts.bilibili_music:main"
 medley-identify = "scripts.medley_identify:main"
 music-library-dedup = "scripts.music_library_dedup:main"
 metadata-resync = "scripts.metadata_resync:main"
+bilingual-subtitles = "scripts.bilingual_subtitles:main"
 
 [tool.setuptools.packages.find]
 include = ["scripts*"]

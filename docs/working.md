@@ -2,6 +2,13 @@
 
 ## Changelog
 
+### 2026-07-19
+
+- Added an agent-led bilingual subtitle workflow for local or permitted online talks, meetings, lessons, and speeches.
+- Added deterministic `bilingual-subtitles` commands for VTT packet preparation, reviewed-work coverage checks, SRT rendering, and structural validation; correction, semantic segmentation, and translation remain agent responsibilities.
+- Added offline tests for VTT parsing, packet boundaries, grouped source-cue coverage, explicit segment timing, mixed Chinese/Latin spacing, overlap detection, and media-duration validation.
+- Updated the root router, README, PRD, RFC, and test strategy with the new workflow and CLI/agent boundary.
+
 ### 2026-05-25
 
 - Scoped local music-library deduplication to `~/Music/CloudMusic` and `~/Music/Music` only. Staging directories such as `library/tidal`, `library/youtube`, and medley acquisition artifacts stay outside this pass.
@@ -80,3 +87,6 @@
 - Workflow album names such as `Online Media Skill YouTube Sources` are useful as temporary batch labels but are wrong for library tags. Real imports should use a verified release name, soundtrack/EP/single title, or an unresolved review row.
 - FLAC is not a safe final assumption for Apple Music/iOS library workflows. Ask whether the target player accepts FLAC; if the target is Apple Music or iOS sync, add an ALAC `.m4a` conversion and post-conversion tag/artwork verification step.
 - At batch scale, run a small smoke batch first, verify the full plan/apply/output loop, then fan out parallel research or candidate-review tasks. Keep parallel workers on artifact production and evidence judgment; the main thread should merge maps, apply mutations, and run the final inventory checks.
+- ASR chunks and caption cues are evidence boundaries, not semantic sentence boundaries. Bilingual subtitle work needs an agent pass that can merge adjacent same-speaker cues while retaining source-cue provenance.
+- Keep deterministic subtitle code language-neutral through `line_1` and `line_2`; declare the language order in the agent workflow. For English-Chinese subtitles, stable English-first ordering is easier to review than changing layout with source language.
+- Preserve intentional spaces around Latin names in Chinese text. Collapsing all whitespace produces artifacts such as joined product names and surrounding words.

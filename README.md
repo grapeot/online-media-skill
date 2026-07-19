@@ -9,6 +9,7 @@ The core idea is simple: the CLI produces reusable artifacts, and AI agents make
 - Identify source songs inside music medleys from ASR lyric anchors.
 - Download and transcribe online talks, meetings, and speeches for later translation or summarization.
 - Search for candidate song recordings, transcribe or inspect them, and let an agent verify the match with evidence.
+- Produce reviewed bilingual SRT subtitles from English, Chinese, or mixed-language talks while preserving auditable transcript sidecars.
 
 ## Setup
 
@@ -56,7 +57,7 @@ For AI installers:
 4. If the workspace supports symlinks for global skills, symlink only the root skill. The focused skills should remain local files reached through the root skill.
 5. Keep private media libraries, playlist aliases, API keys, and user-specific routes outside this public repository.
 
-Suggested trigger phrases for the workspace index: `online media skill`, `music skill`, `download and transcribe media`, `identify medley source songs`, `fill music metadata`, `find high quality song source`.
+Suggested trigger phrases for the workspace index: `online media skill`, `music skill`, `download and transcribe media`, `identify medley source songs`, `fill music metadata`, `find high quality song source`, `bilingual subtitles`, `双语字幕`, `generate SRT`.
 
 ### Qwen ASR Setup
 
@@ -87,6 +88,9 @@ Installers should check current upstream instructions before pinning package nam
 
 # Plan/apply metadata repair and Apple Music compatible imports.
 .venv/bin/python scripts/metadata_resync.py --help
+
+# Prepare and validate artifacts for agent-led bilingual subtitles.
+.venv/bin/python scripts/bilingual_subtitles.py --help
 ```
 
 The medley CLI exports deterministic query packs. Final song identification belongs in the agent workflow described in `skills/online_media.md`.
@@ -98,6 +102,7 @@ The medley CLI exports deterministic query packs. Final song identification belo
 - `skills/medley_source_identification.md`: lyric evidence search and source-song CSV/JSON output.
 - `skills/media_metadata.md`: fill and verify local music metadata after download.
 - `skills/source_search.md`: find high-quality candidate media sources from titles, lyrics, or descriptions.
+- `skills/bilingual_subtitles.md`: correct, semantically segment, translate, and review bilingual SRT subtitles using deterministic artifact helpers.
 
 The repository working language is English. If a downstream workspace keeps private notes in another language, keep those notes outside the public repo or clearly mark them as private overlays.
 
