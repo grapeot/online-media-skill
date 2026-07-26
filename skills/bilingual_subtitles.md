@@ -49,15 +49,28 @@ Every source cue ID must appear exactly once across the reviewed records. The ag
 The agent owns all language decisions:
 
 - compare available transcript sources and listen around unresolved timestamps;
-- correct plausible common-word substitutions involving names or technical terms;
-- preserve meaning and intentional code-switching while removing only non-semantic filler that harms readability;
-- restore complete sentences across raw cue boundaries;
+- correct only high-confidence recognition errors involving names, technical terms, or clearly misheard common words;
+- preserve the speaker's wording, word order, repetitions, self-corrections, hesitation, and intentional code-switching;
+- restore a sentence across raw cue boundaries without rewriting its syntax;
 - split long speech at aligned semantic boundaries in both languages;
-- translate naturally rather than mirroring source-language word order;
+- translate naturally within each segment without adding, omitting, or resolving meaning that the speaker left uncertain;
 - keep terminology consistent across parallel work packets;
 - inspect packet boundaries after merging subagent output.
 
 Do not invent an unclear model name, person, product, or number. Preserve uncertainty in a review note and resolve it by listening when it affects meaning.
+
+## Fidelity Before Readability
+
+The default editorial contract is transcript correction, not prose editing. A subtitle may improve punctuation and line breaks, but it must not make the speaker more concise, certain, grammatical, or pedagogically complete than the recording.
+
+- Keep the source transcript as the wording baseline. Independent ASR is corroborating evidence, not permission to smooth the source.
+- Preserve meaningful repetition, false starts, unfinished phrases, hedges, and self-corrections. A non-lexical `um` or `uh` may be omitted when it has no semantic role, but do not remove surrounding words to make the sentence cleaner.
+- Do not replace a phrase with a shorter synonym, summarize several clauses, supply an implied conclusion, or reorder syntax merely to improve reading speed.
+- Joining adjacent same-speaker cues is allowed only when the caption source split one spoken sentence. Preserve the original token order after joining.
+- Never silently absorb substantive speech from another speaker. A very short acknowledgment may remain short when speaker fidelity is more important than display duration.
+- Translation may use natural target-language grammar, but it must preserve negation, uncertainty, repetition, self-correction, technical relationships, and the direction of actions.
+
+For parallel packet work, require each worker to report every non-punctuation source-language change as `cue_id: before -> after`. After merging packets, run a separate fidelity audit against the source JSONL. This audit is distinct from readability QA: readability findings may change timing or line breaks, but wording changes require source or independent-ASR evidence.
 
 ## Deterministic CLI
 
@@ -94,6 +107,8 @@ bilingual-subtitles validate --manifest session.subtitle_manifest.json \
 - Product names and mixed Chinese/Latin text retain readable spacing.
 - Rapid acknowledgments under 0.8 seconds are reviewed. Merge redundant exchanges when meaning survives; do not extend text across another speaker's meaningful speech.
 - A short pilot is rendered and inspected before full-session processing.
+- Every non-punctuation correction is traceable to a cue and supporting evidence.
+- A final fidelity audit confirms that readability edits did not paraphrase, summarize, remove meaningful speech, or resolve uncertainty.
 - The final SRT passes `validate` and a player-load or subtitle-track mux smoke test.
 
 ## Known Failure Modes
@@ -103,4 +118,8 @@ bilingual-subtitles validate --manifest session.subtitle_manifest.json \
 - Selecting every cue that intersects adjacent time packets duplicates boundary-spanning cues. Packet assignment must use cue start time.
 - Removing all whitespace joins mixed-script text into artifacts such as `AIBuilder` or `officehour`.
 - Structurally valid parallel packets can still disagree on terminology or split one thought at packet boundaries. Run a global language and boundary review before rendering.
+- Readability review can overcorrect a transcript by turning spoken language into polished prose. Treat suggestions to shorten, combine, or clarify wording as suspect unless the source audio supports them.
+- Parallel agents tend to normalize grammar and remove repetitions even when asked only to correct ASR. Collect their non-punctuation edits and audit them against source cues before rendering.
+- Eliminating every short subtitle can erase speaker turns or false starts. Accept unavoidable short cues when the alternative is cross-speaker merging or invented wording.
+- A valid source cue can end a few milliseconds after the probed media duration. Keep the source record auditable, but trim the final rendered segment to the exact media duration.
 - Some FFmpeg builds omit the libass `subtitles` filter. A short mux using `mov_text` plus `ffprobe` is a valid loadability smoke test for MP4 workflows.

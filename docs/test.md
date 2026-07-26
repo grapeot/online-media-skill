@@ -58,7 +58,11 @@ For media download/tagging, manually verify that a downloaded `.m4a` can be open
 
 For medley identification, manually inspect final agent CSV rows with `confidence=high` and confirm that each row has source text supporting both lyric evidence and song identity.
 
-For bilingual subtitles, run a short pilot before full processing. Inspect language order, terminology, sentence boundaries, translation alignment, short display intervals, and packet boundaries. After rendering, run `bilingual-subtitles validate` and verify the SRT loads in the target player. If FFmpeg lacks the libass `subtitles` filter, mux a short MP4 with `-c:s mov_text` and confirm the subtitle stream with `ffprobe`.
+For bilingual subtitles, run a short pilot before full processing. Inspect language order, terminology, sentence boundaries, translation alignment, short display intervals, and packet boundaries. Treat source wording as the baseline: line breaking and punctuation may improve, but the pilot must not paraphrase, summarize, remove meaningful repetitions or false starts, or turn uncertain speech into a definite claim.
+
+At batch scale, have each packet worker list every non-punctuation source-language correction. After merging, run a separate fidelity audit against source JSONL and independent ASR evidence. Keep this separate from readability QA so pressure to eliminate fragments or short display intervals does not silently rewrite the transcript. Spot-check negation, uncertainty, self-correction, cross-speaker handoffs, and translations of technical action direction.
+
+After rendering, run `bilingual-subtitles validate` with the probed media duration and confirm the final subtitle does not extend beyond the media. Verify the SRT loads in the target player. If FFmpeg lacks the libass `subtitles` filter, mux a short MP4 with `-c:s mov_text` and confirm the video, audio, and subtitle streams with `ffprobe`.
 
 For local music-library inventory, run:
 
