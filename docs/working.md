@@ -2,6 +2,13 @@
 
 ## Changelog
 
+### 2026-07-26
+
+- Made source fidelity the default bilingual-subtitle editorial contract: correct high-confidence ASR errors, but do not paraphrase, summarize, normalize spoken syntax, remove meaningful repetitions, or resolve uncertainty.
+- Split fidelity audit from readability QA. Parallel packet workers now need an auditable list of non-punctuation source-language changes before final rendering.
+- Documented the trade-off for short speaker turns: preserve substantive speech and speaker boundaries instead of forcing every cue above a display-duration threshold.
+- Added final media-tail verification and the option to trim only the rendered segment when a caption source exceeds the probed media duration by a few milliseconds.
+
 ### 2026-07-19
 
 - Added an agent-led bilingual subtitle workflow for local or permitted online talks, meetings, lessons, and speeches.
@@ -90,3 +97,8 @@
 - ASR chunks and caption cues are evidence boundaries, not semantic sentence boundaries. Bilingual subtitle work needs an agent pass that can merge adjacent same-speaker cues while retaining source-cue provenance.
 - Keep deterministic subtitle code language-neutral through `line_1` and `line_2`; declare the language order in the agent workflow. For English-Chinese subtitles, stable English-first ordering is easier to review than changing layout with source language.
 - Preserve intentional spaces around Latin names in Chinese text. Collapsing all whitespace produces artifacts such as joined product names and surrounding words.
+- Semantic segmentation is not semantic rewriting. Joining cues to recover a spoken sentence must preserve the speaker's original token order, repetition, self-correction, hedging, and unfinished phrases.
+- Independent ASR can confirm a local correction, but a smoother ASR transcript is not authority to replace the source transcript wholesale.
+- Readability QA naturally optimizes toward polished prose and fewer short captions. Without a separate fidelity audit, it can flip negation, erase live confusion, or teach a correction that the speaker had not yet reached.
+- Parallel translation workers should return a ledger of every non-punctuation source-language change. This makes unsupported normalization visible before packet outputs are merged.
+- Structural validation proves coverage and timing, not transcript faithfulness. Final acceptance needs both deterministic validation and source-to-reviewed language audit.
