@@ -2,6 +2,11 @@
 
 ## Changelog
 
+### 2026-08-17
+
+- Documented a Bilibili playurl 412 recovery route in `skills/download_and_transcribe.md`: when yt-dlp hits 412 on `api.bilibili.com/x/player/playurl` even with valid Chrome or Safari cookies, risk control is blocking the client fingerprint rather than the cookies. Warm a curl cookie jar with anonymous buvid cookies, then drive the HTML5 playurl channel (`platform=html5&high_quality=1&fnval=0`) directly with curl to get a direct 720p MP4 URL for ASR intake.
+- Recorded that `yt-dlp --cookies-from-browser chrome` can hang indefinitely while Chrome is running; prefer timeouts or Safari cookie extraction, and verify cookie validity by replaying the failing API call with curl before blaming the cookies.
+
 ### 2026-07-26
 
 - Made source fidelity the default bilingual-subtitle editorial contract: correct high-confidence ASR errors, but do not paraphrase, summarize, normalize spoken syntax, remove meaningful repetitions, or resolve uncertainty.
@@ -76,6 +81,7 @@
 ## Lessons Learned
 
 - `yt-dlp --write-info-json` outputs can include signed CDN URLs, browser identifiers, headers, and expiring download parameters. Treat real `.info.json` files as private runtime data.
+- When a Bilibili API returns 412 with valid cookies, replay the exact call with plain curl using the same cookie jar before debugging cookies. If curl succeeds, the block is fingerprint-based and the curl HTML5-channel fallback is faster than fighting yt-dlp.
 - Real `.m4a`, full ASR lyric transcripts, search payloads, and result CSV files should stay out of the public repo.
 - ASR is an artifact-producing media transformation. It can live in the CLI even though the model is probabilistic, because downstream agents can inspect and rerun the artifact.
 - Search strategy, source credibility, song identity, translation quality, and confidence labels belong in the agent workflow, not the deterministic CLI.
