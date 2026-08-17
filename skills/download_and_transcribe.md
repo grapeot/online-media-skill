@@ -48,6 +48,41 @@ If the canonical BV URL still returns 412, retry with browser cookies only for l
   'https://www.bilibili.com/video/BVxxxxxxxxxx/'
 ```
 
+### Bilibili playurl 412: curl fingerprint fallback
+
+Sometimes the 412 persists even with valid browser cookies: page extraction and wbi signing succeed, but the playurl API rejects yt-dlp's request fingerprint. Observed in the wild (2026-08): `--cookies-from-browser chrome` hung indefinitely while Chrome was running, and both Chrome and Safari cookie routes still hit 412 on `api.bilibili.com/x/player/playurl`, while plain curl with the same anonymous cookies got HTTP 200. Bilibili risk control was blocking the client fingerprint, not the cookies.
+
+Recovery route that worked: skip yt-dlp entirely for playurl and drive the HTML5 API with curl.
+
+1. Collect anonymous risk-control cookies (buvid3/buvid4 plus b_nut/b_3/b_4 style fields). Either call the finger/spi endpoint or warm a curl cookie jar against the homepage first:
+
+```bash
+UA='Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'
+curl -s -A "$UA" 'https://api.bilibili.com/x/frontend/finger/spi'   # returns b_3 / b_4
+curl -s -A "$UA" -c cookies.txt -o /dev/null 'https://www.bilibili.com/'
+curl -s -L -A "$UA" -b cookies.txt -c cookies.txt -H 'Referer: https://www.bilibili.com/' \
+  -o /dev/null 'https://www.bilibili.com/video/BVxxxxxxxxxx/'
+```
+
+2. Fetch video metadata (title, duration, cid) from the view API:
+
+```bash
+curl -s -A "$UA" -b cookies.txt \
+  'https://api.bilibili.com/x/web-interface/view?bvid=BVxxxxxxxxxx'
+```
+
+3. Request the HTML5 playurl channel (`platform=html5&high_quality=1&fnval=0`). This legacy channel is typically not behind the aggressive fingerprint risk control and returns a direct 720p MP4 `durl[0].url` (audio included; extract or remux with ffmpeg afterwards):
+
+```bash
+curl -s -A "$UA" -b cookies.txt \
+  -H 'Referer: https://www.bilibili.com/video/BVxxxxxxxxxx/' \
+  'https://api.bilibili.com/x/player/playurl?bvid=BVxxxxxxxxxx&cid=<CID>&platform=html5&high_quality=1&fnval=0&qn=80'
+```
+
+4. Download the returned CDN URL with the browser UA and a `Referer: https://www.bilibili.com/` header, otherwise the CDN rejects the request.
+
+The API JSON and CDN URLs are signed and expire; treat cookie jars, API responses, and expanded Bilibili URLs as private runtime data. This route caps at 720p MP4, which is fine for ASR intake but not for archive-quality audio; prefer the normal yt-dlp path when it works.
+
 Treat any `.info.json` and expanded Bilibili URLs as private runtime data. They may include signed CDN URLs, cookies, `buvid`, share session IDs, or local browser-derived state. Keep them under ignored runtime directories and never copy them into docs, fixtures, commits, or public issue/PR bodies.
 
 ### YouTube / yt-dlp Route
@@ -135,6 +170,7 @@ The repo does not hard-require one fixed ASR installation path. If `ONLINE_MEDIA
 ## Known Failure Modes
 
 - Bilibili flat playlist metadata can show video IDs instead of titles. The real title may only appear after single-item extraction.
+- A playurl 412 with valid browser cookies can mean the risk control blocks the client fingerprint, not the cookies. Verify by replaying the same call with plain curl before assuming the cookies are bad; see the curl fingerprint fallback above.
 - `yt-dlp --write-info-json` can save signed URLs and headers. Treat those files as private runtime data.
 - Platform audio format IDs differ by login status and availability. Prefer declared best-audio behavior over assuming one fixed bitrate.
 - Tidal candidate metadata can omit live/accompaniment qualifiers that appear in the downloaded filename. Treat post-download filename/tag QA as part of the acquisition workflow.
